@@ -54,6 +54,16 @@ const chromium = require('@sparticuz/chromium');
 const playwright = require('playwright-core');
 
 module.exports = async (req, res) => {
+  // Set CORS headers for all requests
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   try {
     const { source, landscape, use_print } = JSON.parse(req.body);
 
@@ -82,3 +92,4 @@ module.exports = async (req, res) => {
     res.status(500).send('Failed to generate PDF');
   }
 };
+
