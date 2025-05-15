@@ -6,6 +6,14 @@ const app = express();
 app.use(express.json()); // Accept JSON body
 app.use(cors({ origin: '*' })); // Enable CORS
 
+
+app.get('/',(req,res)=>{
+     console.log("a request is here")
+    res.send("i am listening")
+   
+})
+
+
 app.post('/generate-pdf', async (req, res) => {
   try {
     const { source, landscape = false, use_print = false } = req.body;
