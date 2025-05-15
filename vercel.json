@@ -1,8 +1,9 @@
 {
-    "version": 2,
-    "builds":[{"src":"pdfConverter.js","use":"@vercel/node"}],
-    "routes":[{
-        "src":"/(.*)",
-        "dest":"pdfConverter.js"
-    }]
+  "version": 2,
+  "builds": [
+    { "src": "api/pdfConverter.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/generate-pdf", "dest": "api/pdfConverter.js" }
+  ]
 }
