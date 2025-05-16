@@ -1,9 +1,26 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/pdfConverter.js", "use": "@vercel/node" }
+    { 
+      "src": "api/pdfConverter.js", 
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "node_modules/@sparticuz/chromium/bin/**",
+          "node_modules/playwright-core/**"
+        ],
+        "maxLambdaSize": "50mb"  
+      }
+    }
   ],
   "routes": [
-    { "src": "/api/generate-pdf", "dest": "api/pdfConverter.js" }
+    { 
+      "src": "/api/generate-pdf",
+      "dest": "api/pdfConverter.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS"
+      }
+    }
   ]
 }

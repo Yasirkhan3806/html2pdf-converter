@@ -1,1 +1,13 @@
-{"scripts":{"start":"node pdfConverter.js"},"dependencies":{"@sparticuz/chromium":"^133.0.0","cors":"^2.8.5","express":"^5.1.0","nodemon":"^3.1.10","playwright-core":"^1.52.0","puppeteer":"^24.8.2"}}
+{
+  "scripts": {
+    "start": "node pdfConverter.js",
+    "postinstall": "playwright install chromium"
+  },
+  "dependencies": {
+    "@sparticuz/chromium": "114.0.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10",
+    "playwright-core": "1.40.0"
+  }
+}

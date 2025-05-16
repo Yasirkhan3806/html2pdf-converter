@@ -2,30 +2,21 @@ const chromium = require('@sparticuz/chromium');
 const playwright = require('playwright-core');
 
 module.exports = async (req, res) => {
-  // Set CORS headers for all incoming requests
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle preflight request
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  // Optional: Simple GET endpoint to verify server is live
-  if (req.method === 'GET') {
-    return res.status(200).json({ message: 'Server is live' });
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    // Properly handle both parsed and unparsed bodies
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { source, landscape, use_print } = body;
+    const { source, landscape = false, use_print = false } = JSON.parse(req.body);
 
     const browser = await playwright.chromium.launch({
       args: chromium.args,
       executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      headless: true,
+      channel: 'chrome'
     });
 
     const page = await browser.newPage();
@@ -33,19 +24,24 @@ module.exports = async (req, res) => {
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
-      landscape: landscape || false,
-      printBackground: use_print || false,
+      landscape,
+      printBackground: use_print,
+      margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
     });
 
     await browser.close();
 
+    // Vercel-specific binary handling
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="generated.pdf"');
-    return res.status(200).send(pdfBuffer);
+    res.setHeader('Content-Disposition', 'attachment; filename="document.pdf"');
+    
+    return res.status(200).send(Buffer.from(pdfBuffer.toString('base64'), 'base64'));
+
   } catch (error) {
-    console.error(error);
-    // Ensure error response includes CORS headers
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(500).json({ error: 'Failed to generate PDF' });
+    console.error('PDF Generation Error:', error);
+    res.status(500).json({ 
+      error: error.message,
+      success: false
+    });
   }
 };
