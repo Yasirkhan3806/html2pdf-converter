@@ -1,10 +1,9 @@
 {
   "scripts": {
-    "start": "node pdfConverter.js",
-    "postinstall": "playwright install chromium"
+    "start": "node pdfConverter.js"
   },
   "dependencies": {
-    "@sparticuz/chromium": "114.0.0",
+    "@sparticuz/chromium": "^114.0.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "nodemon": "^3.1.10",
