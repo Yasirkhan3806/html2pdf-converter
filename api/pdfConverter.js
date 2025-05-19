@@ -1,47 +1,62 @@
-const chromium = require('@sparticuz/chromium');
-const playwright = require('playwright-core');
+const express = require('express');
+const bodyParser = require('body-parser');
+const puppeteer = require('puppeteer');
+const cors = require('cors')
 
-module.exports = async (req, res) => {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+const app = express();
+app.use(cors())
+app.use(bodyParser.json({ limit: '50mb' }));
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-
+app.post('/generate-pdf', async (req, res) => {
   try {
-    const { source, landscape = false, use_print = false } = JSON.parse(req.body);
+    console.log(req.body)
+    const items = req.body;
+    if (!Array.isArray(items)) {
+      return res.status(400).send('Request body should be an array');
+    }
 
-    const browser = await playwright.chromium.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath(),
-      headless: true,
-      channel: 'chrome'
-    });
+    const browser = await puppeteer.launch({
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
+  headless: true,
+  args: ['--no-sandbox', '--disable-setuid-sandbox'],
+});
 
     const page = await browser.newPage();
-    await page.setContent(source, { waitUntil: 'networkidle' });
 
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      landscape,
-      printBackground: use_print,
-      margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
-    });
+    for (const item of items) {
+      const { html, filename } = item;
+      
+      await page.setContent(html, {
+        waitUntil: ['networkidle0']
+      });
 
-    await browser.close();
+      const pdf = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '20px',
+          right: '20px',
+          bottom: '20px',
+          left: '20px'
+        }
+      });
 
-    // Vercel-specific binary handling
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="document.pdf"');
-    
-    return res.status(200).send(Buffer.from(pdfBuffer.toString('base64'), 'base64'));
+      await browser.close();
 
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(pdf);
+    }
   } catch (error) {
-    console.error('PDF Generation Error:', error);
-    res.status(500).json({ 
-      error: error.message,
-      success: false
-    });
+    res.status(500).send('Error generating PDF: ' + error.message);
   }
-};
+});
+
+app.get('/',(req,res)=>{
+  res.status(200).json({message:"done"})
+})
+
+const PORT = process.env.PORT || 2000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
